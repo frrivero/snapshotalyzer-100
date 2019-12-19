@@ -1,10 +1,25 @@
 import boto3
 import pprint
+import click
 
-if __name__ == '__main__':
-    session = boto3.Session(profile_name='frrivero-belion')
-    ec2 = session.resource('ec2')
+session = boto3.Session(profile_name='frrivero-belion')
+ec2 = session.resource('ec2')
 
+
+@click.command()
+def list_instances():
+    "List EC2 instances"
     pp = pprint.PrettyPrinter(indent=4)
     for i in ec2.instances.all():
-        pp.pprint(i)
+        print(','.join((
+            i.id,
+            i.instance_type,
+            i.placement['AvailabilityZone'],
+            i.state['Name'],
+            i.root_device_type,
+            i.public_dns_name)))
+    return
+
+
+if __name__ == '__main__':
+    list_instances()
