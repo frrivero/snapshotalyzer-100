@@ -118,7 +118,7 @@ def get_snapshots(project):
 
 @snapshots.command('list')
 @click.option('--project', default=None, help='Only snapshots for project')
-@click.option('--all', 'list_all', default=False, idFlag=True, help='If true not just the most recent snapshot will be '
+@click.option('--all', 'list_all', default=False, is_flag=True, help='If true not just the most recent snapshot will be '
                                                                     'returned')
 def list_snapshots(project, list_all):
     """List Snapshots"""
