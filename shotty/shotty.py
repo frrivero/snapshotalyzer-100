@@ -118,8 +118,10 @@ def get_snapshots(project):
 
 @snapshots.command('list')
 @click.option('--project', default=None, help='Only snapshots for project')
-def list_snapshots(project):
-    """List Volume Snapshots"""
+@click.option('--all', 'list_all', default=False, idFlag=True, help='If true not just the most recent snapshot will be '
+                                                                    'returned')
+def list_snapshots(project, list_all):
+    """List Snapshots"""
     for i in get_snapshots(project):
         # print(i)
         print(', '.join((
@@ -130,6 +132,7 @@ def list_snapshots(project):
             ("Not_Encrypted", "Encrypted")[i.encrypted],  # (if_test_is_false, if_test_is_true)[test]
             i.encrypted and "Encrypted" or "Not_Encrypted",
         )))
+        if i.state == 'completed' and not list_all: break
     return
 
 
@@ -143,14 +146,23 @@ def create_snapshots(project):
         print("Stopping instance: {0}".format(i.id))
         i.wait_until_stopped()
         for v in i.volumes.filter(Filters=filters):
+            if has_pending_snapshot(v):
+                print("     Skipping vol {0} because has pending snapshots".format(v.id))
+                continue
             print("     Creating snapshot for volume {0} of instance: {1}".format(v.id, i.id))
             v.create_snapshot(Description='Created with Shotty')
+
         i.start()
         print("Starting instance: {0}".format(i.id))
         i.wait_until_running()
         print("Instance {0} started".format(i.id))
     print("Job is done!!!")
     return
+
+
+def has_pending_snapshot(vol):
+    snapshots = vol.snapshots.all()
+    return snapshots and snapshots[0].state == 'pending'
 
 
 if __name__ == '__main__':
